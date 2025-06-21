@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Planet, Character, Vehicle, Favorite
 #from models import Person
 
 app = Flask(__name__)
@@ -44,6 +44,43 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@app.route('/users', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    return jsonify([user.serialize() for user in users]), 200
+
+@app.route('/planets', methods=['GET'])
+def get_planets():
+    planets = Planet.query.all()
+    return jsonify([planet.serialize() for planet in planets]), 200
+
+@app.route('/characters', methods=['GET'])
+def get_characters():
+    characters = Character.query.all()
+    return jsonify([char.serialize() for char in characters]), 200
+
+@app.route('/vehicles', methods=['GET'])
+def get_vehicles():
+    vehicles = Vehicle.query.all()
+    return jsonify([vehicle.serialize() for vehicle in vehicles]), 200
+
+@app.route('/favorites/<int:user_id>', methods=['GET'])
+def get_favorites_by_user(user_id):
+    favorites = Favorite.query.filter_by(user_id=user_id).all()
+    return jsonify([fav.serialize() for fav in favorites]), 200
+
+@app.route('/favorites/<int:favorite_id>', methods=['DELETE'])
+def delete_favorite(favorite_id):
+    favorite = Favorite.query.get(favorite_id)
+    
+    if favorite is None:
+        return jsonify({"msg": "Favorito no encontrado"}), 404
+
+    db.session.delete(favorite)
+    db.session.commit()
+
+    return jsonify({"msg": f"Favorito con id {favorite_id} eliminado"}), 200
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
